@@ -10,11 +10,11 @@
  */
 
 // Get your Twitter keys from https://apps.twitter.com
-var TWITTER_CONSUMER_KEY = "YOUR_TWITTER_CONSUMER_KEY",
-    TWITTER_CONSUMER_SECRET = "YOUR_TWITTER_CONSUMER_SECRET";
+var TWITTER_CONSUMER_KEY = "###############",
+    TWITTER_CONSUMER_SECRET = "###################";
 
 // Get your google script project key from File -> Project properties
-var SCRIPT_PROJECT_KEY = "YOUR_SCRIPT_PROJECT_KEY";
+var SCRIPT_PROJECT_KEY = "####################3";
 
 // Setting cache time to less than 15 minutes may result in hitting Twitter API Rate Limits
 var CACHE_TIME = 900; // 15 minutes
@@ -38,6 +38,9 @@ function start() {
         msg += "Sample RSS Feeds for Twitter\n";
         msg += "============================";
 
+		msg += "\n\nTwitter Timeline";
+        msg += "\n" + url + "?action=home&q=#";
+		
         msg += "\n\nTwitter Timeline of user @mitchellmckenna";
         msg += "\n" + url + "?action=timeline&q=mitchellmckenna";
 
@@ -66,6 +69,12 @@ function doGet(e) {
         description;
 
     switch (action) {
+	
+        case "home":
+            feed = "https://api.twitter.com/1.1/statuses/home_timeline.json";
+            permalink = "https://twitter.com/" + query;
+            description = "Twitter updates from " + query + ".";
+            break;
         case "timeline":
             feed = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=" + query;
             permalink = "https://twitter.com/" + query;
@@ -124,10 +133,10 @@ function jsonToRss(feed, permalink, description, action, query) {
 
     if (tweets) {
         var rss = '<?xml version="1.0"?><rss version="2.0">';
-        rss += '<channel><title>Twitter ' + action + ': ' + query + '</title>';
-        rss += '<link>' + permalink + '</link>';
-        rss += '<description>' + description + '</description>';
-
+            rss += '<channel><title>Twitter ' + action + ': ' + query + '</title>';
+            rss += '<link>' + permalink + '</link>';
+            rss += '<description>' + description + '</description>';
+        
 
         for (var i = 0; i < tweets.length; i++) {
             var sender = tweets[i].user.screen_name,
@@ -146,7 +155,7 @@ function jsonToRss(feed, permalink, description, action, query) {
             rss += "</item>";
         }
 
-
+      
         rss += "</channel></rss>";
 
         return rss;
@@ -162,10 +171,10 @@ function checkTwitterRateLimit() {
 
 function oAuth() {
     var service = getTwitterService();
-
+    
     // Uncomment this is to debug Twitter OAuth failing.
     //service.reset();
-
+  
     if (service.hasAccess()) {
         return service;
     } else {
@@ -190,26 +199,26 @@ function getTwitterService() {
 function authCallback(request) {
     var service = getTwitterService(),
         isAuthorized = service.handleCallback(request);
-
+  
     if (isAuthorized) {
-        return HtmlService.createHtmlOutput('Success! Your feeds should now be working. You can close this page.');
+      return HtmlService.createHtmlOutput('Success! Your feeds should now be working. You can close this page.');
     } else {
-        return HtmlService.createHtmlOutput('Denied. You can close this page');
+      return HtmlService.createHtmlOutput('Denied. You can close this page');
     }
 }
 
 function errorHandler(e) {
     Logger.log(e.toString());
-
+  
     var cache = CacheService.getPublicCache(),
         message = e.message || e.toString(),
         errorCacheId = Utilities.base64Encode(message.substr(0, 64));
-
+  
     if (EMAIL_ERROR_REPORTING && !cache.get(errorCacheId)) {
         MailApp.sendEmail(Session.getActiveUser().getEmail(), "Twitter RSS Feeds Error", message);
         cache.put(errorCacheId, true, EMAIL_ERROR_REPORTING_CACHE_TIME);
     }
-
+          
     return HtmlService.createHtmlOutput(e.message);
 }
 
